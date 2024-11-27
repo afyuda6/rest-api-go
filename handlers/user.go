@@ -5,69 +5,130 @@ import (
 	"net/http"
 	"rest-api-go/database"
 	"rest-api-go/models"
+	"strconv"
 )
 
 func UserHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
 	switch r.Method {
 	case http.MethodGet:
-		handleGetUsers(w)
+		handleReadUsers(w)
 	case http.MethodPost:
-		handleAddUser(w, r)
+		handleCreateUser(w, r)
 	case http.MethodPut:
 		handleUpdateUser(w, r)
 	case http.MethodDelete:
 		handleDeleteUser(w, r)
 	default:
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		response := models.Response{
+			Status: "Method Not Allowed",
+			Code:   405,
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(response)
 	}
 }
 
-func handleGetUsers(w http.ResponseWriter) {
-	rows, err := database.DB.Query("SELECT id, name FROM users")
-	if err != nil {
-		http.Error(w, "Failed to fetch users", http.StatusInternalServerError)
-		return
-	}
+func handleReadUsers(w http.ResponseWriter) {
+	rows, _ := database.DB.Query("SELECT id, name FROM users")
 	defer rows.Close()
 
-	var users []models.User
+	users := []models.User{}
 	for rows.Next() {
 		var user models.User
-		if err := rows.Scan(&user.ID, &user.Name); err != nil {
-			http.Error(w, "Failed to parse users", http.StatusInternalServerError)
-			return
-		}
+		rows.Scan(&user.ID, &user.Name)
 		users = append(users, user)
 	}
 
-	json.NewEncoder(w).Encode(users)
+	response := models.Response{
+		Status: "OK",
+		Code:   200,
+		Data:   users,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
 }
 
-func handleAddUser(w http.ResponseWriter, r *http.Request) {
-	var newUser models.User
-	if err := json.NewDecoder(r.Body).Decode(&newUser); err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+func handleCreateUser(w http.ResponseWriter, r *http.Request) {
+	name := r.FormValue("name")
+	if name == "" && len(r.Form["name"]) == 0 {
+		errors := []string{"Missing 'name' parameter"}
+		response := models.Response{
+			Status: "Bad Request",
+			Code:   400,
+			Errors: errors,
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(response)
 		return
 	}
 
-	result, err := database.DB.Exec("INSERT INTO users (name) VALUES (?)", newUser.Name)
-	if err != nil {
-		http.Error(w, "Failed to add user", http.StatusInternalServerError)
-		return
-	}
+	newUser := models.User{Name: name}
+	database.DB.Exec("INSERT INTO users (name) VALUES (?)", newUser.Name)
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		http.Error(w, "Failed to retrieve user ID", http.StatusInternalServerError)
-		return
+	response := models.Response{
+		Status: "Created",
+		Code:   201,
 	}
-
-	newUser.ID = int(id)
-	json.NewEncoder(w).Encode(newUser)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(response)
 }
 
-func handleUpdateUser(w http.ResponseWriter, r *http.Request) {}
+func handleUpdateUser(w http.ResponseWriter, r *http.Request) {
+	idStr := r.FormValue("id")
+	name := r.FormValue("name")
+	if idStr == "" && len(r.Form["id"]) == 0 || name == "" && len(r.Form["name"]) == 0 {
+		errors := []string{"Missing 'id' or 'name' parameter"}
+		response := models.Response{
+			Status: "Bad Request",
+			Code:   400,
+			Errors: errors,
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
 
-func handleDeleteUser(w http.ResponseWriter, r *http.Request) {}
+	id, _ := strconv.Atoi(idStr)
+	newUser := models.User{ID: id, Name: name}
+	database.DB.Exec("UPDATE users SET name = ? WHERE id = ?", newUser.Name, newUser.ID)
+
+	response := models.Response{
+		Status: "OK",
+		Code:   200,
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
+}
+
+func handleDeleteUser(w http.ResponseWriter, r *http.Request) {
+	id := r.FormValue("id")
+	if id == "" && len(r.Form["id"]) == 0 {
+		errors := []string{"Missing 'id' parameter"}
+		response := models.Response{
+			Status: "Bad Request",
+			Code:   400,
+			Errors: errors,
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	database.DB.Exec("DELETE FROM users WHERE id = ?", id)
+
+	response := models.Response{
+		Status: "OK",
+		Code:   200,
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
+}
