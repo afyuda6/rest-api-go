@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 	"net/http"
-
 	"rest-api-go/database"
 	"rest-api-go/handlers"
 )
