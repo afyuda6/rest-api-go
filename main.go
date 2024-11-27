@@ -14,6 +14,7 @@ func main() {
 	defer database.DB.Close()
 
 	http.HandleFunc("/users", handlers.UserHandler)
+	http.HandleFunc("/users/", handlers.UserHandler)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/users" {
