@@ -6,8 +6,14 @@ import (
 	"net/http"
 	"rest-api-go/database"
 	"rest-api-go/handlers"
-	"rest-api-go/models"
 )
+
+type Response struct {
+	Status string      `json:"status"`
+	Code   int         `json:"code"`
+	Data   interface{} `json:"data,omitempty"`
+	Errors []string    `json:"errors,omitempty"`
+}
 
 func main() {
 	database.InitializeDatabase()
@@ -18,7 +24,7 @@ func main() {
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/users" {
-			response := models.Response{
+			response := Response{
 				Status: "Not Found",
 				Code:   404,
 			}

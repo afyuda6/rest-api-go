@@ -4,9 +4,20 @@ import (
 	"encoding/json"
 	"net/http"
 	"rest-api-go/database"
-	"rest-api-go/models"
 	"strconv"
 )
+
+type Response struct {
+	Status string      `json:"status"`
+	Code   int         `json:"code"`
+	Data   interface{} `json:"data,omitempty"`
+	Errors []string    `json:"errors,omitempty"`
+}
+
+type User struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+}
 
 func UserHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
@@ -19,7 +30,7 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodDelete:
 		handleDeleteUser(w, r)
 	default:
-		response := models.Response{
+		response := Response{
 			Status: "Method Not Allowed",
 			Code:   405,
 		}
@@ -33,14 +44,14 @@ func handleReadUsers(w http.ResponseWriter) {
 	rows, _ := database.DB.Query("SELECT id, name FROM users")
 	defer rows.Close()
 
-	users := []models.User{}
+	users := []User{}
 	for rows.Next() {
-		var user models.User
+		var user User
 		rows.Scan(&user.ID, &user.Name)
 		users = append(users, user)
 	}
 
-	response := models.Response{
+	response := Response{
 		Status: "OK",
 		Code:   200,
 		Data:   users,
@@ -55,7 +66,7 @@ func handleCreateUser(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	if name == "" && len(r.Form["name"]) == 0 {
 		errors := []string{"Missing 'name' parameter"}
-		response := models.Response{
+		response := Response{
 			Status: "Bad Request",
 			Code:   400,
 			Errors: errors,
@@ -66,10 +77,10 @@ func handleCreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newUser := models.User{Name: name}
+	newUser := User{Name: name}
 	database.DB.Exec("INSERT INTO users (name) VALUES (?)", newUser.Name)
 
-	response := models.Response{
+	response := Response{
 		Status: "Created",
 		Code:   201,
 	}
@@ -83,7 +94,7 @@ func handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	if idStr == "" && len(r.Form["id"]) == 0 || name == "" && len(r.Form["name"]) == 0 {
 		errors := []string{"Missing 'id' or 'name' parameter"}
-		response := models.Response{
+		response := Response{
 			Status: "Bad Request",
 			Code:   400,
 			Errors: errors,
@@ -95,10 +106,10 @@ func handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id, _ := strconv.Atoi(idStr)
-	newUser := models.User{ID: id, Name: name}
+	newUser := User{ID: id, Name: name}
 	database.DB.Exec("UPDATE users SET name = ? WHERE id = ?", newUser.Name, newUser.ID)
 
-	response := models.Response{
+	response := Response{
 		Status: "OK",
 		Code:   200,
 	}
@@ -111,7 +122,7 @@ func handleDeleteUser(w http.ResponseWriter, r *http.Request) {
 	id := r.FormValue("id")
 	if id == "" && len(r.Form["id"]) == 0 {
 		errors := []string{"Missing 'id' parameter"}
-		response := models.Response{
+		response := Response{
 			Status: "Bad Request",
 			Code:   400,
 			Errors: errors,
@@ -124,7 +135,7 @@ func handleDeleteUser(w http.ResponseWriter, r *http.Request) {
 
 	database.DB.Exec("DELETE FROM users WHERE id = ?", id)
 
-	response := models.Response{
+	response := Response{
 		Status: "OK",
 		Code:   200,
 	}
