@@ -15,6 +15,12 @@ func InitializeDatabase() {
 		log.Fatalf("SQL error (open database): %v", err)
 	}
 
+	dropTableQuery := `DROP TABLE IF EXISTS user;`
+	_, err = DB.Exec(dropTableQuery)
+	if err != nil {
+		log.Fatalf("SQL error (drop users table): %v", err)
+	}
+
 	createTableQuery := `CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT NOT NULL)`
 	_, err = DB.Exec(createTableQuery)
 	if err != nil {
