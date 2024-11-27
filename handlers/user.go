@@ -15,6 +15,10 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 		handleGetUsers(w)
 	case http.MethodPost:
 		handleAddUser(w, r)
+	case http.MethodPut:
+		handleUpdateUser(w, r)
+	case http.MethodDelete:
+		handleDeleteUser(w, r)
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
@@ -63,3 +67,7 @@ func handleAddUser(w http.ResponseWriter, r *http.Request) {
 	newUser.ID = int(id)
 	json.NewEncoder(w).Encode(newUser)
 }
+
+func handleUpdateUser(w http.ResponseWriter, r *http.Request) {}
+
+func handleDeleteUser(w http.ResponseWriter, r *http.Request) {}
