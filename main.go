@@ -13,8 +13,7 @@ func main() {
 
 	http.HandleFunc("/users", handlers.UserHandler)
 
-	log.Println("Server running on port 6001")
 	if err := http.ListenAndServe(":6001", nil); err != nil {
-		log.Fatalf("Server failed to start: %s", err)
+		log.Fatalf("Server failed!\n")
 	}
 }
