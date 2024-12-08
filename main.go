@@ -20,10 +20,22 @@ func main() {
 	defer database.DB.Close()
 
 	http.HandleFunc("/users", handlers.UserHandler)
-	http.HandleFunc("/users/", handlers.UserHandler)
+	http.HandleFunc("/users/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/users" || r.URL.Path == "/users/" {
+			handlers.UserHandler(w, r)
+		} else {
+			response := Response{
+				Status: "Not Found",
+				Code:   404,
+			}
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(response)
+		}
+	})
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/users" {
+		if r.URL.Path != "/users" && r.URL.Path != "/users/" {
 			response := Response{
 				Status: "Not Found",
 				Code:   404,

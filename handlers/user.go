@@ -5,13 +5,14 @@ import (
 	"net/http"
 	"rest-api-go/database"
 	"strconv"
+	"strings"
 )
 
 type Response struct {
 	Status string      `json:"status"`
 	Code   int         `json:"code"`
 	Data   interface{} `json:"data,omitempty"`
-	Errors []string    `json:"errors,omitempty"`
+	Errors string      `json:"errors,omitempty"`
 }
 
 type User struct {
@@ -35,7 +36,7 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 			Code:   405,
 		}
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusMethodNotAllowed)
 		json.NewEncoder(w).Encode(response)
 	}
 }
@@ -63,9 +64,9 @@ func handleReadUsers(w http.ResponseWriter) {
 }
 
 func handleCreateUser(w http.ResponseWriter, r *http.Request) {
-	name := r.FormValue("name")
-	if name == "" && len(r.Form["name"]) == 0 {
-		errors := []string{"Missing 'name' parameter"}
+	name := strings.TrimSpace(r.FormValue("name"))
+	if name == "" {
+		errors := "Missing 'name' parameter"
 		response := Response{
 			Status: "Bad Request",
 			Code:   400,
@@ -90,10 +91,10 @@ func handleCreateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleUpdateUser(w http.ResponseWriter, r *http.Request) {
-	idStr := r.FormValue("id")
-	name := r.FormValue("name")
-	if idStr == "" && len(r.Form["id"]) == 0 || name == "" && len(r.Form["name"]) == 0 {
-		errors := []string{"Missing 'id' or 'name' parameter"}
+	name := strings.TrimSpace(r.FormValue("name"))
+	idStr := strings.TrimSpace(r.FormValue("id"))
+	if idStr == "" || name == "" {
+		errors := "Missing 'id' or 'name' parameter"
 		response := Response{
 			Status: "Bad Request",
 			Code:   400,
@@ -119,9 +120,9 @@ func handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleDeleteUser(w http.ResponseWriter, r *http.Request) {
-	id := r.FormValue("id")
-	if id == "" && len(r.Form["id"]) == 0 {
-		errors := []string{"Missing 'id' parameter"}
+	idStr := strings.TrimSpace(r.FormValue("id"))
+	if idStr == "" {
+		errors := "Missing 'id' parameter"
 		response := Response{
 			Status: "Bad Request",
 			Code:   400,
@@ -133,6 +134,7 @@ func handleDeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	id, _ := strconv.Atoi(idStr)
 	database.DB.Exec("DELETE FROM users WHERE id = ?", id)
 
 	response := Response{
