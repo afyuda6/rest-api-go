@@ -20,40 +20,6 @@ type User struct {
 	Name string `json:"name"`
 }
 
-func UserHandler() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/users" || r.URL.Path == "/users/" {
-			switch r.Method {
-			case http.MethodGet:
-				handleReadUsers(w)
-			case http.MethodPost:
-				handleCreateUser(w, r)
-			case http.MethodPut:
-				handleUpdateUser(w, r)
-			case http.MethodDelete:
-				handleDeleteUser(w, r)
-			default:
-				response := Response{
-					Status: "Method Not Allowed",
-					Code:   405,
-				}
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusMethodNotAllowed)
-				json.NewEncoder(w).Encode(response)
-			}
-		} else {
-			response := Response{
-				Status: "Not Found",
-				Code:   404,
-			}
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusNotFound)
-			json.NewEncoder(w).Encode(response)
-			return
-		}
-	})
-}
-
 func handleReadUsers(w http.ResponseWriter) {
 	rows, _ := database.DB.Query("SELECT id, name FROM users")
 	defer rows.Close()
@@ -148,4 +114,38 @@ func handleDeleteUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)
+}
+
+func UserHandler() {
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/users" || r.URL.Path == "/users/" {
+			switch r.Method {
+			case http.MethodGet:
+				handleReadUsers(w)
+			case http.MethodPost:
+				handleCreateUser(w, r)
+			case http.MethodPut:
+				handleUpdateUser(w, r)
+			case http.MethodDelete:
+				handleDeleteUser(w, r)
+			default:
+				response := Response{
+					Status: "Method Not Allowed",
+					Code:   405,
+				}
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusMethodNotAllowed)
+				json.NewEncoder(w).Encode(response)
+			}
+		} else {
+			response := Response{
+				Status: "Not Found",
+				Code:   404,
+			}
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+	})
 }
