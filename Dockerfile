@@ -1,7 +1,5 @@
 FROM ubuntu:20.04
 
-ENV DEBIAN_FRONTEND=noninteractive
-
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     wget \
