@@ -116,8 +116,19 @@ func handleDeleteUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+func addCORSHeaders(w http.ResponseWriter) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+}
+
 func UserHandler() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		addCORSHeaders(w)
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
 		if r.URL.Path == "/users" || r.URL.Path == "/users/" {
 			switch r.Method {
 			case http.MethodGet:
