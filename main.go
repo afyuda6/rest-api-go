@@ -13,7 +13,7 @@ func main() {
 	handlers.UserHandler()
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "6001"
+		port = "6004"
 	}
 	http.ListenAndServe(":"+port, nil)
 }
