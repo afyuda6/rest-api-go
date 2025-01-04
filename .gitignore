@@ -1,5 +1,4 @@
 .idea
 go.mod
 go.sum
-rest-api-go
 rest_api_go.db

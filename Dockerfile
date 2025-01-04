@@ -7,8 +7,10 @@ RUN apt-get update && \
 
 WORKDIR /rest-api-go
 
-COPY rest-api-go /rest-api-go
+COPY . /rest-api-go
+
+RUN go mod tidy && go build -o rest-api-go .
 
 EXPOSE 8080
 
-CMD ["/rest-api-go/rest-api-go"]
+CMD ["./rest-api-go"]
