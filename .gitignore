@@ -1,0 +1,5 @@
+.idea
+go.mod
+go.sum
+rest_api_go.db
+*.sh
